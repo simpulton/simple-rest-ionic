@@ -18,16 +18,21 @@
     <!-- cordova script (this will be a 404 during development) -->
     <script src="cordova.js"></script>
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js"></script>
     <script src="https://cdn.rawgit.com/auth0/angular-storage/master/dist/angular-storage.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.3/angular-animate.min.js"></script>
     <script src="https://rawgit.com/weblogng/weblogng-client-javascript/master/release/logger.js"></script>
     <script src="https://rawgit.com/weblogng/angular-weblogng/master/dist/angular-weblogng.js"></script>
+    <!-- We use client cookies to save the REST API token -->
+    <script src="https://code.angularjs.org/1.3.0/angular-cookies.min.js"></script>
+
+    <!-- Backand SDK for Angular -->
+    <script src="http://cdn.backand.net/backand/dist/1.5.1/backand.min.js"></script>
 
     <!-- your app's js -->
     <script src="js/app.js"></script>
 </head>
-<body ng-app="SimpleRESTIonic" ng-controller="MainCtrl as main" ng-cloak>
+<body ng-app="SimpleRESTIonic" ng-cloak>
 <ion-tabs class="tabs-positive">
     <ion-tab icon="ion-home" ui-sref="dashboard">
         <ion-nav-view name="dashboard"></ion-nav-view>
@@ -47,15 +52,14 @@
       <ion-content class="padding has-header">
         <div>
             <div class="list card" ng-repeat="item in dashboard.items"
-                     ng-class="{'active':dashboard.isCurrentItem(item.id)}">
+                     ng-class="{'active':dashboard.isCurrentItem(item.Id)}">
                 <div class="item item-icon-right item-icon-left">
                 <i class="ion-compose icon" ng-click="dashboard.setEditedItem(item)"></i>
                   <h2 class="text-center">{{item.name}}</h2>
-                  <i class="icon ion-close-round" ng-click="dashboard.deleteItem(item.id)"></i>
+                  <i class="icon ion-close-round" ng-click="dashboard.deleteItem(item.Id)"></i>
                 </div>
                 <div class="item item-body">
                     {{item.description}}
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis eu ante sed dolor eleifend congue. Aliquam eleifend, arcu sed tempus aliquet, mi neque efficitur tellus, vitae interdum lorem felis nec lacus. Etiam pulvinar lacus augue, vel fringilla mi efficitur sit amet.
                 </div>
 
             </div>
@@ -114,7 +118,7 @@
                     <textarea class="form-control"
                            ng-model="dashboard.editedItem.description"
                            placeholder="Enter description"></textarea>
-                    
+
                 </label>
             </div>
             <button class="button button-block button-positive" type="submit">Save</button>
@@ -132,23 +136,18 @@
         <h1 class="title">Login</h1>
     </ion-header-bar>
     <ion-content class="has-header padding">
-        <form ng-submit="login.submit(login.user)">
+        <form ng-submit="login.signin()">
         <div class="list">
 
             <label class="item item-input">
-              <input id="email" name="email" type="email" placeholder="Enter email" ng-model="login.user.email">
+              <input id="email" name="email" type="email" placeholder="Enter email" ng-model="login.email">
             </label>
             <label class="item item-input">
-              <input id="password" name="password" type="password" placeholder="Enter password" ng-model="login.user.password">
+              <input id="password" name="password" type="password" placeholder="Enter password" ng-model="login.password">
             </label>
-            <ul class="list">
-              <li class="item item-checkbox">
-                 <label class="checkbox">
-                   <input id="new_user" name="new_user" type="checkbox" ng-model="login.newUser">
-                 </label>
-                 New User?
-              </li>
-            </ul>
+            <label class="item item-input">
+                <input id="appName" name="appName" type="text" placeholder="App Name" ng-model="login.appName">
+            </label>
           </div>
           <div class="padding">
             <button class="button button-block button-positive" type="submit">

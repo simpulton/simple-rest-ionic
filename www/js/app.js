@@ -3,7 +3,7 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng'])
+angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'backand', 'ngCookies'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -27,40 +27,35 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng'])
     }
   })
 .config(function($stateProvider, $urlRouterProvider, $httpProvider) {
-$stateProvider
-  .state('dashboard', {
-  url: '/dashboard',
-  views: {
-    dashboard: {
-      templateUrl: 'dashboard.html',
-      controller: 'DashboardCtrl as dashboard'
-    }
-  }
-})
-  .state('login', {
-  url: '/login',
-  views: {
-    login: {
-      templateUrl: 'login.html',
-      controller: 'LoginCtrl as login'
-    }
-  }
-});
+    $stateProvider
+      .state('dashboard', {
+        url: '/dashboard',
+        views: {
+            dashboard: {
+                templateUrl: 'dashboard.html',
+                controller: 'DashboardCtrl as dashboard'
+            }
+        }
+    })
+    .state('login', {
+        url: '/login',
+        views: {
+            login: {
+                templateUrl: 'login.html',
+                controller: 'LoginCtrl as login'
+            }
+        }
+    });
 
     $urlRouterProvider.otherwise('/dashboard');
 
     $httpProvider.interceptors.push('APIInterceptor');
 })
-.service('APIInterceptor', function($rootScope, UserService) {
+.service('APIInterceptor', function($rootScope, $cookieStore) {
     var service = this;
 
     service.request = function(config) {
-        var currentUser = UserService.getCurrentUser(),
-            access_token = currentUser ? currentUser.access_token : null;
-
-        if (access_token) {
-            config.headers.authorization = access_token;
-        }
+        config.headers['Authorization'] = $cookieStore.get('backand_token');
         return config;
     };
 
@@ -71,53 +66,13 @@ $stateProvider
         return response;
     };
 })
-.service('UserService', function(store) {
+.service('ItemsModel', function ($http, Backand) {
     var service = this,
-        currentUser = null;
-
-    service.setCurrentUser = function(user) {
-        currentUser = user;
-        store.set('user', user);
-        return currentUser;
-    };
-
-    service.getCurrentUser = function() {
-        if (!currentUser) {
-            currentUser = store.get('user');
-        }
-        return currentUser;
-    };
-})
-.service('LoginService', function($http, ENDPOINT_URI) {
-    var service = this,
-        path = 'Users/';
-
-    function getUrl() {
-        return ENDPOINT_URI + path;
-    }
-
-    function getLogUrl(action) {
-        return getUrl() + action;
-    }
-
-    service.login = function(credentials) {
-        return $http.post(getLogUrl('login'), credentials);
-    };
-
-    service.logout = function() {
-        return $http.post(getLogUrl('logout'));
-    };
-
-    service.register = function(user) {
-        return $http.post(getUrl(), user);
-    };
-})
-.service('ItemsModel', function ($http, ENDPOINT_URI) {
-    var service = this,
+        tableUrl = '/1/table/data/',
         path = 'items/';
 
     function getUrl() {
-        return ENDPOINT_URI + path;
+        return Backand.configuration.apiUrl + tableUrl + path;
     }
 
     function getUrlForId(itemId) {
@@ -144,81 +99,68 @@ $stateProvider
         return $http.delete(getUrlForId(itemId));
     };
 })
-.controller('LoginCtrl', function($rootScope, $state, LoginService, UserService){
+.service('LoginService', function(Backand) {
+    var service = this;
+
+    service.signin = function(email, password, appName) {
+        return Backand.signin(email, password, appName)
+    };
+
+    service.signout = function() {
+        Backand.signout();
+    };
+})
+.controller('LoginCtrl', function(Backand, $state, $rootScope, $cookieStore, LoginService){
     var login = this;
 
-    function signIn(user) {
-        LoginService.login(user)
+    function signin() {
+        LoginService.signin(login.email, login.password, login.appName)
             .then(function(response) {
-                user.access_token = response.data.id;
-                UserService.setCurrentUser(user);
+                $cookieStore.put(Backand.configuration.tokenName, response);
                 $rootScope.$broadcast('authorized');
                 $state.go('dashboard');
-            });
-    }
-
-    function register(user) {
-        LoginService.register(user)
-            .then(function(response) {
-                login(user);
-            });
-    }
-
-    function submit(user) {
-        console.log("handling submit of " + user);
-        login.newUser ? register(user) : signIn(user);
-    }
-
-    login.newUser = false;
-    login.submit = submit;
-})
-.controller('MainCtrl', function ($rootScope, $state, LoginService, UserService) {
-    var main = this;
-
-    function logout() {
-        LoginService.logout()
-            .then(function(response) {
-                main.currentUser = UserService.setCurrentUser(null);
-                $state.go('login');
             }, function(error) {
-                console.log(error);
-            });
+                console.log(error)
+            })
     }
-
-    $rootScope.$on('authorized', function() {
-        main.currentUser = UserService.getCurrentUser();
-    });
-
+    login.signin = signin;
+})
+.run(function($rootScope, $state, LoginService, $cookieStore) {
     $rootScope.$on('unauthorized', function() {
         console.log("user is unauthorized, sending to login");
-        main.currentUser = UserService.setCurrentUser(null);
         $state.go('login');
     });
 
-    main.logout = logout;
-    main.currentUser = UserService.getCurrentUser();
+    $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
+        if (toState.name == 'login') {
+            LoginService.signout();
+        }
+        else if (toState.name != 'login' && $cookieStore.get('backand_token') === undefined) {
+            console.log("user is unauthorized, sending to login");
+            $state.go('login');
+        }
+    });
 })
-.controller('DashboardCtrl', function(ItemsModel){
-
+.controller('DashboardCtrl', function(ItemsModel, $rootScope){
     var dashboard = this;
 
     function getItems() {
         ItemsModel.all()
             .then(function (result) {
-                dashboard.items = result.data;
+                dashboard.items = result.data.data;
             });
     }
 
     function createItem(item) {
         ItemsModel.create(item)
             .then(function (result) {
-                initCreateForm();
+                cancelCreateItem();
                 getItems();
             });
     }
 
     function updateItem(item) {
-        ItemsModel.update(item.id, item)
+        ItemsModel.update(item.Id, item)
             .then(function (result) {
                 cancelEditing();
                 getItems();
@@ -243,7 +185,7 @@ $stateProvider
     }
 
     function isCurrentItem(itemId) {
-        return dashboard.editedItem !== null && dashboard.editedItem.id === itemId;
+        return dashboard.editedItem !== null && dashboard.editedItem.Id === itemId;
     }
 
     function cancelEditing() {
@@ -269,7 +211,12 @@ $stateProvider
     dashboard.cancelEditing = cancelEditing;
     dashboard.cancelCreateItem = cancelCreateItem;
 
+    $rootScope.$on('authorized', function() {
+        getItems();
+    });
+
     initCreateForm();
     getItems();
-})
+
+    })
 ;
