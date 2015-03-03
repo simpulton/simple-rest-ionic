@@ -17,7 +17,6 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
     }
   });
 })
-.constant('ENDPOINT_URI', 'https://simple-rest-api.herokuapp.com/api/')
 .constant('weblogngConfig', {
     apiKey: 'd156e786-9cb4-4737-99ad-fdb905340275',
     options: {
@@ -123,21 +122,29 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
                 console.log(error)
             })
     }
+
     login.signin = signin;
 })
 .run(function($rootScope, $state, LoginService, $cookieStore) {
-    $rootScope.$on('unauthorized', function() {
+
+    function unauthorized() {
         console.log("user is unauthorized, sending to login");
         $state.go('login');
+    }
+    function signout() {
+        LoginService.signout();
+    }
+
+    $rootScope.$on('unauthorized', function() {
+        unauthorized();
     });
 
     $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
         if (toState.name == 'login') {
-            LoginService.signout();
+            signout();
         }
         else if (toState.name != 'login' && $cookieStore.get('backand_token') === undefined) {
-            console.log("user is unauthorized, sending to login");
-            $state.go('login');
+            unauthorized();
         }
     });
 })
