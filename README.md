@@ -1,5 +1,5 @@
 # Simple REST with ionic
-A simple project uisng [Ionic framework](http://ionicframework.com) demonstrating CRUD, built using AngularJS, and powered by [Backand](https://www.backand.com).
+A simple project using [Ionic framework](http://ionicframework.com) demonstrating CRUD powered by [Backand](https://www.backand.com).
 
 ## Prerequisites
 You will need:
