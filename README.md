@@ -8,6 +8,7 @@ You will need:
 
 ## Getting Started ##
 1. Create new App in Backand with the following model:
+
   ```json
   [
     {
@@ -39,7 +40,9 @@ You will need:
   $ npm install -g cordova ionic
   ```
   
-4. Run in the web browser:
+4. You can run ionic in the browser or simulator:
+
+  Run in the web browser:
   ```bash
   $ ionic serve
   ```
