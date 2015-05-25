@@ -27,11 +27,11 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
   })
 .config(function(BackandProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
     BackandProvider.manageDefaultHeaders();
-    BackandProvider.setAnonymousToken('Your Anonymous Token');
-    BackandProvider.setSignUpToken('Your SignUp Token');
+    //BackandProvider.setAnonymousToken('Your Anonymous Token');
+    //BackandProvider.setSignUpToken('Your SignUp Token');
 
     $stateProvider
-      .state('dashboard', {
+    .state('dashboard', {
         url: '/dashboard',
         views: {
             dashboard: {
@@ -54,14 +54,14 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
 
     $httpProvider.interceptors.push('APIInterceptor');
 })
-.service('APIInterceptor', function($rootScope) {
+.service('APIInterceptor', function($rootScope, $q) {
     var service = this;
 
     service.responseError = function(response) {
         if (response.status === 401) {
             $rootScope.$broadcast('unauthorized');
         }
-        return response;
+        return $q.reject(response);
     };
 })
 .service('ItemsModel', function ($http, Backand) {
@@ -132,7 +132,7 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
     login.signin = signin;
     login.signout = signout;
 })
-.run(function($rootScope, $state, LoginService) {
+.run(function($rootScope, $state, LoginService, Backand) {
 
     function unauthorized() {
         console.log("user is unauthorized, sending to login");
@@ -145,6 +145,15 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
 
     $rootScope.$on('unauthorized', function() {
         unauthorized();
+    });
+
+    $rootScope.$on('$stateChangeSuccess', function(event, toState) {
+        if (toState.name == 'login') {
+            signout();
+        }
+        else if (toState.name != 'login' && Backand.getToken() === undefined) {
+            unauthorized();
+        }
     });
 
 })
