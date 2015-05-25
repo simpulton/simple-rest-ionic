@@ -25,7 +25,11 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
       application: 'simple-rest-website'
     }
   })
-.config(function($stateProvider, $urlRouterProvider, $httpProvider) {
+.config(function(BackandProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
+    BackandProvider.manageDefaultHeaders();
+    BackandProvider.setAnonymousToken('Your Anonymous Token');
+    BackandProvider.setSignUpToken('Your SignUp Token');
+
     $stateProvider
       .state('dashboard', {
         url: '/dashboard',
@@ -50,13 +54,8 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
 
     $httpProvider.interceptors.push('APIInterceptor');
 })
-.service('APIInterceptor', function($rootScope, $cookieStore) {
+.service('APIInterceptor', function($rootScope) {
     var service = this;
-
-    service.request = function(config) {
-        config.headers['Authorization'] = $cookieStore.get('backand_token');
-        return config;
-    };
 
     service.responseError = function(response) {
         if (response.status === 401) {
@@ -67,11 +66,11 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
 })
 .service('ItemsModel', function ($http, Backand) {
     var service = this,
-        tableUrl = '/1/table/data/',
+        tableUrl = '/1/objects/',
         path = 'items/';
 
     function getUrl() {
-        return Backand.configuration.apiUrl + tableUrl + path;
+        return Backand.getApiUrl() + tableUrl + path;
     }
 
     function getUrlForId(itemId) {
@@ -102,11 +101,11 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
     var service = this;
 
     service.signin = function(email, password, appName) {
-        return Backand.signin(email, password, appName)
+        return Backand.signin(email, password, appName);
     };
 
     service.signout = function() {
-        Backand.signout();
+        return Backand.signout();
     };
 })
 .controller('LoginCtrl', function(Backand, $state, $rootScope, $cookieStore, LoginService){
@@ -114,8 +113,7 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
 
     function signin() {
         LoginService.signin(login.email, login.password, login.appName)
-            .then(function(response) {
-                $cookieStore.put(Backand.configuration.tokenName, response);
+            .then(function() {
                 $rootScope.$broadcast('authorized');
                 $state.go('dashboard');
             }, function(error) {
@@ -123,9 +121,18 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
             })
     }
 
+    function signout(){
+        LoginService.signout()
+            .then(function() {
+                $state.go('login', {}, {reload: true});
+            })
+
+    }
+
     login.signin = signin;
+    login.signout = signout;
 })
-.run(function($rootScope, $state, LoginService, $cookieStore) {
+.run(function($rootScope, $state, LoginService) {
 
     function unauthorized() {
         console.log("user is unauthorized, sending to login");
@@ -133,20 +140,13 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
     }
     function signout() {
         LoginService.signout();
+        $state.go('login');
     }
 
     $rootScope.$on('unauthorized', function() {
         unauthorized();
     });
 
-    $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
-        if (toState.name == 'login') {
-            signout();
-        }
-        else if (toState.name != 'login' && $cookieStore.get('backand_token') === undefined) {
-            unauthorized();
-        }
-    });
 })
 .controller('DashboardCtrl', function(ItemsModel, $rootScope){
     var dashboard = this;

@@ -1,5 +1,5 @@
 # Simple REST with ionic
-A simple project uisng [Ionic framework](http://ionicframework.com) demonstrating CRUD, built using AngularJS, and powered by [Backand](https://www.backand.com).
+A simple project using [Ionic framework](http://ionicframework.com) demonstrating CRUD powered by [Backand](https://www.backand.com).
 
 ## Prerequisites
 You will need:
@@ -40,7 +40,9 @@ You will need:
   $ npm install -g cordova ionic
   ```
   
-4. Run in the web browser:
+4. You can run ionic in the browser or simulator:
+
+  Run in the web browser:
   ```bash
   $ ionic serve
   ```
