@@ -101,7 +101,8 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
     var service = this;
 
     service.signin = function(email, password, appName) {
-        return Backand.signin(email, password, appName);
+        Backand.setAppName(appName);
+        return Backand.signin(email, password);
     };
 
     service.signout = function() {
