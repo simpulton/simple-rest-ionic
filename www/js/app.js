@@ -3,7 +3,7 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'backand', 'ngCookies'])
+angular.module('SimpleRESTIonic', ['ionic', 'backand'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
@@ -17,16 +17,7 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
     }
   });
 })
-.constant('weblogngConfig', {
-    apiKey: 'd156e786-9cb4-4737-99ad-fdb905340275',
-    options: {
-      publishNavigationTimingMetrics: true,
-      publishUserActive: true,
-      application: 'simple-rest-website'
-    }
-  })
 .config(function(BackandProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
-    BackandProvider.manageDefaultHeaders();
     //BackandProvider.setAnonymousToken('Your Anonymous Token');
     //BackandProvider.setSignUpToken('Your SignUp Token');
 
@@ -101,7 +92,11 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
     var service = this;
 
     service.signin = function(email, password, appName) {
+
+        //set the app name of Backand. In your app copy this to .config section with hard coded app name
         Backand.setAppName(appName);
+
+        //call Backand for sign in
         return Backand.signin(email, password);
     };
 
@@ -109,7 +104,7 @@ angular.module('SimpleRESTIonic', ['ionic', 'angular-storage', 'weblogng', 'back
         return Backand.signout();
     };
 })
-.controller('LoginCtrl', function(Backand, $state, $rootScope, $cookieStore, LoginService){
+.controller('LoginCtrl', function(Backand, $state, $rootScope, LoginService){
     var login = this;
 
     function signin() {
