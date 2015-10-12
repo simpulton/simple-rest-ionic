@@ -7,7 +7,7 @@ You will need:
 * [NodeJS and NPM](https://gist.github.com/isaacs/579814)
 
 ## Getting Started ##
-1. Create new App in Backand with the following model:
+1. Create new App in Backand with the following model (or just keep the default Model):
 
 ```json
 [
@@ -19,6 +19,27 @@ You will need:
       },
       "description": {
         "type": "text"
+      },
+      "user": {
+        "object": "users"
+      }
+    }
+  },
+  {
+    "name": "users",
+    "fields": {
+      "email": {
+        "type": "string"
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
+      "items": {
+        "collection": "items",
+        "via": "user"
       }
     }
   }
