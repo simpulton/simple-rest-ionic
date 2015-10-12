@@ -57,11 +57,11 @@ angular.module('SimpleRESTIonic', ['ionic', 'backand'])
 })
 .service('ItemsModel', function ($http, Backand) {
     var service = this,
-        tableUrl = '/1/objects/',
-        path = 'items/';
+        baseUrl = '/1/objects/',
+        object = 'items/';
 
     function getUrl() {
-        return Backand.getApiUrl() + tableUrl + path;
+        return Backand.getApiUrl() + baseUrl + object;
     }
 
     function getUrlForId(itemId) {
@@ -84,7 +84,7 @@ angular.module('SimpleRESTIonic', ['ionic', 'backand'])
         return $http.put(getUrlForId(itemId), item);
     };
 
-    service.destroy = function (itemId) {
+    service.delete = function (itemId) {
         return $http.delete(getUrlForId(itemId));
     };
 })
@@ -180,7 +180,7 @@ angular.module('SimpleRESTIonic', ['ionic', 'backand'])
     }
 
     function deleteItem(itemId) {
-        ItemsModel.destroy(itemId)
+        ItemsModel.delete(itemId)
             .then(function (result) {
                 cancelEditing();
                 getItems();
