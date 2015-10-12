@@ -18,217 +18,215 @@ angular.module('SimpleRESTIonic', ['ionic', 'backand'])
   });
 })
 .config(function(BackandProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
-    //BackandProvider.setAnonymousToken('Your Anonymous Token');
-    //BackandProvider.setSignUpToken('Your SignUp Token');
+  //BackandProvider.setAnonymousToken('Your Anonymous Token');
+  //BackandProvider.setSignUpToken('Your SignUp Token');
 
-    $stateProvider
-    .state('dashboard', {
+  $stateProvider
+      .state('dashboard', {
         url: '/dashboard',
         views: {
-            dashboard: {
-                templateUrl: 'dashboard.html',
-                controller: 'DashboardCtrl as dashboard'
-            }
+          dashboard: {
+            templateUrl: 'dashboard.html',
+            controller: 'DashboardCtrl as dashboard'
+          }
         }
-    })
-    .state('login', {
+      })
+      .state('login', {
         url: '/login',
         views: {
-            login: {
-                templateUrl: 'login.html',
-                controller: 'LoginCtrl as login'
-            }
+          login: {
+            templateUrl: 'login.html',
+            controller: 'LoginCtrl as login'
+          }
         }
-    });
+      });
 
-    $urlRouterProvider.otherwise('/dashboard');
+  $urlRouterProvider.otherwise('/dashboard');
 
-    $httpProvider.interceptors.push('APIInterceptor');
+  $httpProvider.interceptors.push('APIInterceptor');
 })
 .service('APIInterceptor', function($rootScope, $q) {
-    var service = this;
+  var service = this;
 
-    service.responseError = function(response) {
-        if (response.status === 401) {
-            $rootScope.$broadcast('unauthorized');
-        }
-        return $q.reject(response);
-    };
+  service.responseError = function(response) {
+    if (response.status === 401) {
+      $rootScope.$broadcast('unauthorized');
+    }
+    return $q.reject(response);
+  };
 })
 .service('ItemsModel', function ($http, Backand) {
-    var service = this,
-        baseUrl = '/1/objects/',
-        object = 'items/';
+  var service = this,
+      baseUrl = '/1/objects/',
+      object = 'items/';
 
-    function getUrl() {
-        return Backand.getApiUrl() + baseUrl + object;
-    }
+  function getUrl() {
+    return Backand.getApiUrl() + baseUrl + object;
+  }
 
-    function getUrlForId(itemId) {
-        return getUrl(path) + itemId;
-    }
+  function getUrlForId(itemId) {
+    return getUrl() + itemId;
+  }
 
-    service.all = function () {
-        return $http.get(getUrl());
-    };
+  service.all = function () {
+    return $http.get(getUrl());
+  };
 
-    service.fetch = function (itemId) {
-        return $http.get(getUrlForId(itemId));
-    };
+  service.fetch = function (itemId) {
+    return $http.get(getUrlForId(itemId));
+  };
 
-    service.create = function (item) {
-        return $http.post(getUrl(), item);
-    };
+  service.create = function (item) {
+    return $http.post(getUrl(), item);
+  };
 
-    service.update = function (itemId, item) {
-        return $http.put(getUrlForId(itemId), item);
-    };
+  service.update = function (itemId, item) {
+    return $http.put(getUrlForId(itemId), item);
+  };
 
-    service.delete = function (itemId) {
-        return $http.delete(getUrlForId(itemId));
-    };
+  service.delete = function (itemId) {
+    return $http.delete(getUrlForId(itemId));
+  };
 })
 .service('LoginService', function(Backand) {
-    var service = this;
+  var service = this;
 
-    service.signin = function(email, password, appName) {
+  service.signin = function(email, password, appName) {
 
-        //set the app name of Backand. In your app copy this to .config section with hard coded app name
-        Backand.setAppName(appName);
+    //set the app name of Backand. In your app copy this to .config section with hard coded app name
+    Backand.setAppName(appName);
 
-        //call Backand for sign in
-        return Backand.signin(email, password);
-    };
+    //call Backand for sign in
+    return Backand.signin(email, password);
+  };
 
-    service.signout = function() {
-        return Backand.signout();
-    };
+  service.signout = function() {
+    return Backand.signout();
+  };
 })
 .controller('LoginCtrl', function(Backand, $state, $rootScope, LoginService){
-    var login = this;
+  var login = this;
 
-    function signin() {
-        LoginService.signin(login.email, login.password, login.appName)
-            .then(function() {
-                $rootScope.$broadcast('authorized');
-                $state.go('dashboard');
-            }, function(error) {
-                console.log(error)
-            })
-    }
+  function signin() {
+    LoginService.signin(login.email, login.password, login.appName)
+      .then(function() {
+        $rootScope.$broadcast('authorized');
+        $state.go('dashboard');
+      }, function(error) {
+        console.log(error)
+      })
+  }
 
-    function signout(){
-        LoginService.signout()
-            .then(function() {
-                $state.go('login', {}, {reload: true});
-            })
+  function signout(){
+    LoginService.signout()
+      .then(function() {
+        $state.go('login');
+      })
 
-    }
+  }
 
-    login.signin = signin;
-    login.signout = signout;
+  login.signin = signin;
+  login.signout = signout;
 })
 .run(function($rootScope, $state, LoginService, Backand) {
 
-    function unauthorized() {
-        console.log("user is unauthorized, sending to login");
-        $state.go('login');
-    }
-    function signout() {
-        LoginService.signout();
-        $state.go('login');
-    }
+  function unauthorized() {
+    console.log("user is unauthorized, sending to login");
+    $state.go('login');
+  }
+  function signout() {
+    LoginService.signout();
+  }
 
-    $rootScope.$on('unauthorized', function() {
-        unauthorized();
-    });
+  $rootScope.$on('unauthorized', function() {
+    unauthorized();
+  });
 
-    $rootScope.$on('$stateChangeSuccess', function(event, toState) {
-        if (toState.name == 'login') {
-            signout();
-        }
-        else if (toState.name != 'login' && Backand.getToken() === undefined) {
-            unauthorized();
-        }
-    });
+  $rootScope.$on('$stateChangeSuccess', function(event, toState) {
+    if (toState.name == 'login') {
+      signout();
+    }
+    else if (toState.name != 'login' && Backand.getToken() === undefined) {
+      unauthorized();
+    }
+  });
 
 })
 .controller('DashboardCtrl', function(ItemsModel, $rootScope){
-    var dashboard = this;
+  var dashboard = this;
 
-    function getItems() {
-        ItemsModel.all()
-            .then(function (result) {
-                dashboard.items = result.data.data;
-            });
-    }
+  function getItems() {
+    ItemsModel.all()
+      .then(function (result) {
+        dashboard.items = result.data.data;
+      });
+  }
 
-    function createItem(item) {
-        ItemsModel.create(item)
-            .then(function (result) {
-                cancelCreateItem();
-                getItems();
-            });
-    }
+  function createItem(item) {
+    ItemsModel.create(item)
+      .then(function (result) {
+        cancelCreateItem();
+        getItems();
+      });
+  }
 
-    function updateItem(item) {
-        ItemsModel.update(item.Id, item)
-            .then(function (result) {
-                cancelEditing();
-                getItems();
-            });
-    }
+  function updateItem(item) {
+    ItemsModel.update(item.id, item)
+      .then(function (result) {
+        cancelEditing();
+        getItems();
+      });
+  }
 
-    function deleteItem(itemId) {
-        ItemsModel.delete(itemId)
-            .then(function (result) {
-                cancelEditing();
-                getItems();
-            });
-    }
+  function deleteItem(itemId) {
+    ItemsModel.delete(itemId)
+      .then(function (result) {
+        cancelEditing();
+        getItems();
+      });
+  }
 
-    function initCreateForm() {
-        dashboard.newItem = { name: '', description: '' };
-    }
+  function initCreateForm() {
+    dashboard.newItem = { name: '', description: '' };
+  }
 
-    function setEditedItem(item) {
-        dashboard.editedItem = angular.copy(item);
-        dashboard.isEditing = true;
-    }
+  function setEditedItem(item) {
+    dashboard.editedItem = angular.copy(item);
+    dashboard.isEditing = true;
+  }
 
-    function isCurrentItem(itemId) {
-        return dashboard.editedItem !== null && dashboard.editedItem.Id === itemId;
-    }
+  function isCurrentItem(itemId) {
+    return dashboard.editedItem !== null && dashboard.editedItem.id === itemId;
+  }
 
-    function cancelEditing() {
-        dashboard.editedItem = null;
-        dashboard.isEditing = false;
-    }
-
-    function cancelCreateItem() {
-        initCreateForm();
-        dashboard.isCreating = false;
-    }
-
-    dashboard.items = [];
+  function cancelEditing() {
     dashboard.editedItem = null;
     dashboard.isEditing = false;
-    dashboard.isCreating = false;
-    dashboard.getItems = getItems;
-    dashboard.createItem = createItem;
-    dashboard.updateItem = updateItem;
-    dashboard.deleteItem = deleteItem;
-    dashboard.setEditedItem = setEditedItem;
-    dashboard.isCurrentItem = isCurrentItem;
-    dashboard.cancelEditing = cancelEditing;
-    dashboard.cancelCreateItem = cancelCreateItem;
+  }
 
-    $rootScope.$on('authorized', function() {
-        getItems();
-    });
-
+  function cancelCreateItem() {
     initCreateForm();
-    getItems();
+    dashboard.isCreating = false;
+  }
 
-    })
-;
+  dashboard.items = [];
+  dashboard.editedItem = null;
+  dashboard.isEditing = false;
+  dashboard.isCreating = false;
+  dashboard.getItems = getItems;
+  dashboard.createItem = createItem;
+  dashboard.updateItem = updateItem;
+  dashboard.deleteItem = deleteItem;
+  dashboard.setEditedItem = setEditedItem;
+  dashboard.isCurrentItem = isCurrentItem;
+  dashboard.cancelEditing = cancelEditing;
+  dashboard.cancelCreateItem = cancelCreateItem;
+
+  $rootScope.$on('authorized', function() {
+    getItems();
+  });
+
+  initCreateForm();
+  getItems();
+
+});
