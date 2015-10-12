@@ -70,7 +70,7 @@ You will need:
   
   Run in an iOS simulator:
   ```bash
-  $ cordova platform add ios
+  $ ionic platform add ios
   $ ionic build ios
   $ ionic emulate ios
   ```
