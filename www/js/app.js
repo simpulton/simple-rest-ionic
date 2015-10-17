@@ -1,19 +1,22 @@
-// Ionic Starter App
+// Ionic template App
 
 // angular.module is a global place for creating, registering and retrieving Angular modules
-// 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
+// 'SimpleRESTIonic' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('SimpleRESTIonic', ['ionic', 'backand'])
+angular.module('SimpleRESTIonic', ['ionic', 'backand', 'SimpleRESTIonic.controllers', 'SimpleRESTIonic.services'])
 
 .run(function($ionicPlatform) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
-    if(window.cordova && window.cordova.plugins.Keyboard) {
+    if (window.cordova && window.cordova.plugins && window.cordova.plugins.Keyboard) {
       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+      cordova.plugins.Keyboard.disableScroll(true);
+
     }
-    if(window.StatusBar) {
-      StatusBar.styleDefault();
+    if (window.StatusBar) {
+      // org.apache.cordova.statusbar required
+      StatusBar.styleLightContent();
     }
   });
 })
@@ -22,117 +25,41 @@ angular.module('SimpleRESTIonic', ['ionic', 'backand'])
   //BackandProvider.setSignUpToken('Your SignUp Token');
 
   $stateProvider
-      .state('dashboard', {
-        url: '/dashboard',
-        views: {
-          dashboard: {
-            templateUrl: 'dashboard.html',
-            controller: 'DashboardCtrl as dashboard'
-          }
+  // setup an abstract state for the tabs directive
+    .state('tab', {
+      url: '/tabs',
+      abstract: true,
+      templateUrl: 'templates/tabs.html'
+    })
+    .state('tab.dashboard', {
+      url: '/dashboard',
+      views: {
+        'tab-dashboard': {
+          templateUrl: 'templates/tab-dashboard.html',
+          controller: 'DashboardCtrl as dashboard'
         }
-      })
-      .state('login', {
-        url: '/login',
-        views: {
-          login: {
-            templateUrl: 'login.html',
-            controller: 'LoginCtrl as login'
-          }
+      }
+    })
+    .state('tab.login', {
+      url: '/login',
+      views: {
+        'tab-login': {
+          templateUrl: 'templates/tab-login.html',
+          controller: 'LoginCtrl as login'
         }
-      });
+      }
+    });
 
-  $urlRouterProvider.otherwise('/dashboard');
+  $urlRouterProvider.otherwise('/tabs/dashboard');
 
   $httpProvider.interceptors.push('APIInterceptor');
 })
-.service('APIInterceptor', function($rootScope, $q) {
-  var service = this;
 
-  service.responseError = function(response) {
-    if (response.status === 401) {
-      $rootScope.$broadcast('unauthorized');
-    }
-    return $q.reject(response);
-  };
-})
-.service('ItemsModel', function ($http, Backand) {
-  var service = this,
-      baseUrl = '/1/objects/',
-      object = 'items/';
-
-  function getUrl() {
-    return Backand.getApiUrl() + baseUrl + object;
-  }
-
-  function getUrlForId(itemId) {
-    return getUrl() + itemId;
-  }
-
-  service.all = function () {
-    return $http.get(getUrl());
-  };
-
-  service.fetch = function (itemId) {
-    return $http.get(getUrlForId(itemId));
-  };
-
-  service.create = function (item) {
-    return $http.post(getUrl(), item);
-  };
-
-  service.update = function (itemId, item) {
-    return $http.put(getUrlForId(itemId), item);
-  };
-
-  service.delete = function (itemId) {
-    return $http.delete(getUrlForId(itemId));
-  };
-})
-.service('LoginService', function(Backand) {
-  var service = this;
-
-  service.signin = function(email, password, appName) {
-
-    //set the app name of Backand. In your app copy this to .config section with hard coded app name
-    Backand.setAppName(appName);
-
-    //call Backand for sign in
-    return Backand.signin(email, password);
-  };
-
-  service.signout = function() {
-    return Backand.signout();
-  };
-})
-.controller('LoginCtrl', function(Backand, $state, $rootScope, LoginService){
-  var login = this;
-
-  function signin() {
-    LoginService.signin(login.email, login.password, login.appName)
-      .then(function() {
-        $rootScope.$broadcast('authorized');
-        $state.go('dashboard');
-      }, function(error) {
-        console.log(error)
-      })
-  }
-
-  function signout(){
-    LoginService.signout()
-      .then(function() {
-        $state.go('login');
-      })
-
-  }
-
-  login.signin = signin;
-  login.signout = signout;
-})
 .run(function($rootScope, $state, LoginService, Backand) {
 
   function unauthorized() {
     console.log("user is unauthorized, sending to login");
-    $state.go('login');
+    $state.go('tab.login');
   }
   function signout() {
     LoginService.signout();
@@ -143,90 +70,13 @@ angular.module('SimpleRESTIonic', ['ionic', 'backand'])
   });
 
   $rootScope.$on('$stateChangeSuccess', function(event, toState) {
-    if (toState.name == 'login') {
+    if (toState.name == 'tab.login') {
       signout();
     }
-    else if (toState.name != 'login' && Backand.getToken() === undefined) {
+    else if (toState.name != 'tab.login' && Backand.getToken() === undefined) {
       unauthorized();
     }
   });
 
 })
-.controller('DashboardCtrl', function(ItemsModel, $rootScope){
-  var dashboard = this;
 
-  function getItems() {
-    ItemsModel.all()
-      .then(function (result) {
-        dashboard.items = result.data.data;
-      });
-  }
-
-  function createItem(item) {
-    ItemsModel.create(item)
-      .then(function (result) {
-        cancelCreateItem();
-        getItems();
-      });
-  }
-
-  function updateItem(item) {
-    ItemsModel.update(item.id, item)
-      .then(function (result) {
-        cancelEditing();
-        getItems();
-      });
-  }
-
-  function deleteItem(itemId) {
-    ItemsModel.delete(itemId)
-      .then(function (result) {
-        cancelEditing();
-        getItems();
-      });
-  }
-
-  function initCreateForm() {
-    dashboard.newItem = { name: '', description: '' };
-  }
-
-  function setEditedItem(item) {
-    dashboard.editedItem = angular.copy(item);
-    dashboard.isEditing = true;
-  }
-
-  function isCurrentItem(itemId) {
-    return dashboard.editedItem !== null && dashboard.editedItem.id === itemId;
-  }
-
-  function cancelEditing() {
-    dashboard.editedItem = null;
-    dashboard.isEditing = false;
-  }
-
-  function cancelCreateItem() {
-    initCreateForm();
-    dashboard.isCreating = false;
-  }
-
-  dashboard.items = [];
-  dashboard.editedItem = null;
-  dashboard.isEditing = false;
-  dashboard.isCreating = false;
-  dashboard.getItems = getItems;
-  dashboard.createItem = createItem;
-  dashboard.updateItem = updateItem;
-  dashboard.deleteItem = deleteItem;
-  dashboard.setEditedItem = setEditedItem;
-  dashboard.isCurrentItem = isCurrentItem;
-  dashboard.cancelEditing = cancelEditing;
-  dashboard.cancelCreateItem = cancelCreateItem;
-
-  $rootScope.$on('authorized', function() {
-    getItems();
-  });
-
-  initCreateForm();
-  getItems();
-
-});

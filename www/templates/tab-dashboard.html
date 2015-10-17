@@ -1,0 +1,83 @@
+<ion-view view-title="Items">
+    <div ng-if="!dashboard.isCreating && !dashboard.isEditing">
+        <ion-content class="padding has-header">
+            <!-- LIST -->
+            <div class="bar bar-header">
+                <span ng-click="dashboard.isCreating = true"><i class='icon ion-plus-round new-item'> Add Item</i></span>
+            </div>
+            <div class="bar bar-subheader">
+                <div class="list card" ng-repeat="item in dashboard.items"
+                     ng-class="{'active':dashboard.isCurrentItem(item.id)}">
+                    <div class="item item-icon-right item-icon-left">
+                        <i class="ion-compose icon" ng-click="dashboard.setEditedItem(item)"></i>
+                        <h2 class="text-center">{{item.name}}</h2>
+                        <i class="icon ion-close-round" ng-click="dashboard.deleteItem(item.id)"></i>
+                    </div>
+                    <div class="item item-body">
+                        {{item.description}}
+                    </div>
+                </div>
+            </div>
+        </ion-content>
+    </div>
+    <div ng-if="dashboard.isCreating">
+        <ion-content class="padding has-header">
+            <!-- CREATING -->
+            <div class="bar bar-header">
+                <h2 class="title">Create Item</h2>
+                <span ng-click="dashboard.cancelCreateItem()" class="cancel-create">Cancel</span>
+            </div>
+            <div class="bar bar-subheader">
+                <form class="create-form" role="form"
+                      ng-submit="dashboard.createItem(dashboard.newItem)" novalidate>
+                    <div class="list">
+                        <label class="item item-input item-stacked-label">
+                            <span class="input-label">Name</span>
+                            <input type="text" class="form-control"
+                                   ng-model="dashboard.newItem.name"
+                                   placeholder="Enter name">
+                        </label>
+                        <label class="item item-input item-stacked-label">
+                            <span class="input-label">Description</span>
+                        <textarea placeholder="Comments" class="form-control"
+                                  ng-model="dashboard.newItem.description"
+                                  placeholder="Enter description"></textarea>
+                        </label>
+                    </div>
+                    <button class="button button-block button-positive" type="submit">Create</button>
+                </form>
+            </div>
+        </ion-content>
+    </div>
+    <div ng-if="dashboard.isEditing && !dashboard.isCreating">
+        <ion-content class="padding has-header">
+            <!-- EDITING -->
+            <div class="bar bar-header bar-secondary">
+                <h1 class="title">Editing {{dashboard.editedItem.name}}</h1>
+                <span ng-click="dashboard.cancelEditing()" class="cancel-create">Cancel</span>
+            </div>
+            <div class="bar bar-subheader">
+                <form class="edit-form" role="form"
+                      ng-submit="dashboard.updateItem(dashboard.editedItem)" novalidate>
+                    <div class="list">
+                        <label class="item item-input item-stacked-label">
+                            <span class="input-label">Name</span>
+                            <input type="text" class="form-control"
+                                   ng-model="dashboard.editedItem.name"
+                                   placeholder="Enter name">
+                        </label>
+                        <label class="item item-input item-stacked-label">
+                            <span class="input-label">Description</span>
+                    <textarea class="form-control"
+                              ng-model="dashboard.editedItem.description"
+                              placeholder="Enter description"></textarea>
+
+                        </label>
+                    </div>
+                    <button class="button button-block button-positive" type="submit">Save</button>
+                </form>
+            </div>
+        </ion-content>
+    </div>
+</ion-view>
+
