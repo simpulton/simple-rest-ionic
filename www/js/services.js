@@ -14,34 +14,34 @@ angular.module('SimpleRESTIonic.services', [])
 .service('ItemsModel', function ($http, Backand) {
   var service = this,
       baseUrl = '/1/objects/',
-      object = 'items/';
+      objectName = 'items/';
 
   function getUrl() {
-    return Backand.getApiUrl() + baseUrl + object;
+    return Backand.getApiUrl() + baseUrl + objectName;
   }
 
-  function getUrlForId(itemId) {
-    return getUrl() + itemId;
+  function getUrlForId(id) {
+    return getUrl() + id;
   }
 
   service.all = function () {
     return $http.get(getUrl());
   };
 
-  service.fetch = function (itemId) {
-    return $http.get(getUrlForId(itemId));
+  service.fetch = function (id) {
+    return $http.get(getUrlForId(id));
   };
 
-  service.create = function (item) {
-    return $http.post(getUrl(), item);
+  service.create = function (object) {
+    return $http.post(getUrl(), object);
   };
 
-  service.update = function (itemId, item) {
-    return $http.put(getUrlForId(itemId), item);
+  service.update = function (id, object) {
+    return $http.put(getUrlForId(id), object);
   };
 
-  service.delete = function (itemId) {
-    return $http.delete(getUrlForId(itemId));
+  service.delete = function (id) {
+    return $http.delete(getUrlForId(id));
   };
 })
 

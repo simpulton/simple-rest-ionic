@@ -36,7 +36,7 @@ angular.module('SimpleRESTIonic', ['ionic', 'backand', 'SimpleRESTIonic.controll
       views: {
         'tab-dashboard': {
           templateUrl: 'templates/tab-dashboard.html',
-          controller: 'DashboardCtrl as dashboard'
+          controller: 'DashboardCtrl as vm'
         }
       }
     })

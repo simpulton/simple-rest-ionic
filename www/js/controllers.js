@@ -26,81 +26,81 @@ angular.module('SimpleRESTIonic.controllers', [])
 })
 
 .controller('DashboardCtrl', function(ItemsModel, $rootScope){
-  var dashboard = this;
+  var vm = this;
 
-  function getItems() {
+  function getAll() {
     ItemsModel.all()
         .then(function (result) {
-          dashboard.items = result.data.data;
+          vm.data = result.data.data;
         });
   }
 
-  function createItem(item) {
-    ItemsModel.create(item)
+  function create(object) {
+    ItemsModel.create(object)
         .then(function (result) {
-          cancelCreateItem();
-          getItems();
+          cancelCreate();
+          getAll();
         });
   }
 
-  function updateItem(item) {
-    ItemsModel.update(item.id, item)
-        .then(function (result) {
-          cancelEditing();
-          getItems();
-        });
-  }
-
-  function deleteItem(itemId) {
-    ItemsModel.delete(itemId)
+  function update(object) {
+    ItemsModel.update(object.id, object)
         .then(function (result) {
           cancelEditing();
-          getItems();
+          getAll();
+        });
+  }
+
+  function deleteObject(id) {
+    ItemsModel.delete(id)
+        .then(function (result) {
+          cancelEditing();
+          getAll();
         });
   }
 
   function initCreateForm() {
-    dashboard.newItem = { name: '', description: '' };
+    vm.newObject = { name: '', description: '' };
   }
 
-  function setEditedItem(item) {
-    dashboard.editedItem = angular.copy(item);
-    dashboard.isEditing = true;
+  function setEdited(object) {
+    vm.edited = angular.copy(object);
+    vm.isEditing = true;
   }
 
-  function isCurrentItem(itemId) {
-    return dashboard.editedItem !== null && dashboard.editedItem.id === itemId;
+  function isCurrent(id) {
+    return vm.edited !== null && vm.edited.id === id;
   }
 
   function cancelEditing() {
-    dashboard.editedItem = null;
-    dashboard.isEditing = false;
+    vm.edited = null;
+    vm.isEditing = false;
   }
 
-  function cancelCreateItem() {
+  function cancelCreate() {
     initCreateForm();
-    dashboard.isCreating = false;
+    vm.isCreating = false;
   }
 
-  dashboard.items = [];
-  dashboard.editedItem = null;
-  dashboard.isEditing = false;
-  dashboard.isCreating = false;
-  dashboard.getItems = getItems;
-  dashboard.createItem = createItem;
-  dashboard.updateItem = updateItem;
-  dashboard.deleteItem = deleteItem;
-  dashboard.setEditedItem = setEditedItem;
-  dashboard.isCurrentItem = isCurrentItem;
-  dashboard.cancelEditing = cancelEditing;
-  dashboard.cancelCreateItem = cancelCreateItem;
+  vm.objects = [];
+  vm.edited = null;
+  vm.isEditing = false;
+  vm.isCreating = false;
+  vm.getAll = getAll;
+  vm.create = create;
+  vm.update = update;
+  vm.delete = deleteObject;
+  vm.setEdited = setEdited;
+  vm.isCurrent = isCurrent;
+  vm.cancelEditing = cancelEditing;
+  vm.cancelCreate = cancelCreate;
 
   $rootScope.$on('authorized', function() {
-    getItems();
+    getAll();
   });
 
   initCreateForm();
-  getItems();
+      getAll();
 
 });
 
